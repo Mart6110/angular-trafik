@@ -1,0 +1,8 @@
+<div class="dashboard">
+  <app-chart
+    *ngFor="let chartConfig of chartsConfig"
+    [chartType]="chartConfig.type"
+    [title]="chartConfig.title"
+    [data]="chartConfig.data"
+  ></app-chart>
+</div>
