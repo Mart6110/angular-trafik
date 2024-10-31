@@ -1,8 +1,7 @@
-// Importing Angular core modules, ECharts options type, and NgxEchartsModule for chart rendering
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, OnChanges, SimpleChanges, ViewChild, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { EChartsOption } from 'echarts';
-import { NgxEchartsModule } from 'ngx-echarts';
+import { NgxEchartsModule, NgxEchartsDirective } from 'ngx-echarts';
 
 // Define the app-chart component with necessary metadata
 @Component({
@@ -12,7 +11,7 @@ import { NgxEchartsModule } from 'ngx-echarts';
   templateUrl: './chart.component.html',        // Specifies the HTML template file for the component
   styleUrls: ['./chart.component.scss']         // Specifies the stylesheet for the component
 })
-export class ChartComponent implements OnInit {
+export class ChartComponent implements OnInit, OnChanges {
   // Input properties to receive chart configuration from parent components
   @Input() chartType: 'line' | 'bar' | 'scatter' | 'pie' = 'line';   // Default chart type is 'line'
   @Input() title: string = 'Chart';                                  // Default chart title
@@ -21,14 +20,24 @@ export class ChartComponent implements OnInit {
   // Object holding the configuration options for the ECharts instance
   chartOption: EChartsOption = {};
 
+  // Reference to the NgxEchartsDirective
+  @ViewChild(NgxEchartsDirective, { static: false }) chart!: NgxEchartsDirective;
+
+  constructor(private cdr: ChangeDetectorRef) {}
+
   // Lifecycle hook that runs after the component is initialized
   ngOnInit(): void {
     this.updateChart();   // Initialize chart with current input data and settings
   }
 
   // Lifecycle hook to detect changes in input properties and update the chart accordingly
-  ngOnChanges(): void {
-    this.updateChart();   // Update chart if any input data changes
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['data']) {
+      console.log('Chart data changed:', changes['data'].currentValue);
+      console.log('Chart data previous:', changes['data'].previousValue);
+      console.log('Chart data', this.data);
+      this.updateChart();   // Update chart if any input data changes
+    }
   }
 
   // Method to configure chart options based on input properties
@@ -42,5 +51,8 @@ export class ChartComponent implements OnInit {
         data: this.data.y                        // Bind y-axis data for the chart
       }]
     };
+
+    // Manually trigger the chart update
+    this.cdr.detectChanges();
   }
 }
