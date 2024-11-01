@@ -1,15 +1,18 @@
-<!-- Loop through each chart configuration in chartsConfig to render individual chart components -->
-<div class="chart-wrapper">
-  <mat-card *ngFor="let chartConfig of chartsConfig" style="width: 50%;">
-    <mat-card-header>
-      <mat-card-title>{{ chartConfig.title }}</mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
-      <app-chart
-        [chartType]="chartConfig.type"
-        [data]="chartConfig.data"
-      >
-      </app-chart>
-    </mat-card-content>
-  </mat-card>
+<div class="dashboard-wrapper">
+  <div class="dashboard-header">
+    <h3>Dashboard</h3>
+  </div>
+  
+  <!-- Loop through each chart configuration in chartsConfig to render individual chart components -->
+  <div class="chart-wrapper">
+    <mat-card *ngFor="let chartConfig of chartsConfig" style="width: 50%">
+      <mat-card-header>
+        <mat-card-title>{{ chartConfig.title }}</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <app-chart [chartType]="chartConfig.type" [data]="chartConfig.data">
+        </app-chart>
+      </mat-card-content>
+    </mat-card>
+  </div>
 </div>

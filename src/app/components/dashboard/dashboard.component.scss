@@ -8,6 +8,18 @@ app-chart {
     flex: 1 1 calc(50% - 16px);
 }
 
+.dashboard-wrapper {
+    height: 100vh;
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    border-bottom: 1px solid #e0e0e0;
+    margin-inline: 1rem;
+}
+
 .chart-wrapper {
     display: flex;
     flex-direction: row;
