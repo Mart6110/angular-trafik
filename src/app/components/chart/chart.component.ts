@@ -1,58 +1,90 @@
-import { Component, Input, OnInit, OnChanges, SimpleChanges, ViewChild, ChangeDetectorRef } from '@angular/core';
+import {
+  Component,
+  Input,
+  OnInit,
+  OnChanges,
+  SimpleChanges,
+  ViewChild,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { EChartsOption } from 'echarts';
 import { NgxEchartsModule, NgxEchartsDirective } from 'ngx-echarts';
+import { ChartDataService } from '../../services/chart-data.service';
+import { Subscription } from 'rxjs';
 
-// Define the app-chart component with necessary metadata
 @Component({
-  selector: 'app-chart',                        // The CSS selector for this component in HTML
-  standalone: true,                             // Marks this component as standalone
-  imports: [CommonModule, NgxEchartsModule],    // Declares imported modules/components for use in this component
-  templateUrl: './chart.component.html',        // Specifies the HTML template file for the component
-  styleUrls: ['./chart.component.scss']         // Specifies the stylesheet for the component
+  selector: 'app-chart',
+  standalone: true,
+  imports: [CommonModule, NgxEchartsModule],
+  templateUrl: './chart.component.html',
+  styleUrls: ['./chart.component.scss'],
 })
 export class ChartComponent implements OnInit, OnChanges {
-  // Input properties to receive chart configuration from parent components
-  @Input() chartType: 'line' | 'bar' | 'scatter' | 'pie' = 'line';   // Default chart type is 'line'
-  @Input() title: string = 'Chart';                                  // Default chart title
-  @Input() data: { x: string[]; y: number[] } = { x: [], y: [] };    // Default chart data
+  @Input() chartType: 'line' | 'bar' | 'scatter' | 'pie' = 'line';
+  @Input() title: string = '';
+  @Input() data: { x: string[]; y: number[] } = { x: [], y: [] };
 
-  // Object holding the configuration options for the ECharts instance
   chartOption: EChartsOption = {};
+  @ViewChild(NgxEchartsDirective, { static: false })
+  chart!: NgxEchartsDirective;
 
-  // Reference to the NgxEchartsDirective
-  @ViewChild(NgxEchartsDirective, { static: false }) chart!: NgxEchartsDirective;
+  private chartDataSubscription!: Subscription;
 
-  constructor(private cdr: ChangeDetectorRef) {}
+  constructor(
+    private cdr: ChangeDetectorRef,
+    private chartDataService: ChartDataService
+  ) {}
 
-  // Lifecycle hook that runs after the component is initialized
   ngOnInit(): void {
-    this.updateChart();   // Initialize chart with current input data and settings
+    this.updateChart();
+    this.chartDataSubscription = this.chartDataService.chartData$.subscribe(
+      (data) => {
+        console.log('Data received');
+        console.log(data);
+        if (Array.isArray(data)) {
+          this.data = this.transformData(data);
+        } else {
+          console.error('Data format is incorrect:', data);
+        }
+        this.updateChart();
+      }
+    );
   }
 
-  // Lifecycle hook to detect changes in input properties and update the chart accordingly
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data']) {
-      console.log('Chart data changed:', changes['data'].currentValue);
-      console.log('Chart data previous:', changes['data'].previousValue);
-      console.log('Chart data', this.data);
-      this.updateChart();   // Update chart if any input data changes
+      console.log('Data changed:', changes['data'].currentValue);
+      this.updateChart();
     }
   }
 
-  // Method to configure chart options based on input properties
   updateChart(): void {
+    console.log('Updating chart with data:', this.data);
     this.chartOption = {
-      title: { text: this.title },               // Set the chart title
-      xAxis: { type: 'category', data: this.data.x },  // Configure x-axis with categorical data
-      yAxis: { type: 'value' },                  // Configure y-axis as numeric
-      series: [{
-        type: this.chartType,                    // Set the chart type (e.g., line, bar)
-        data: this.data.y                        // Bind y-axis data for the chart
-      }]
+      title: { text: this.title },
+      xAxis: { type: 'category', data: this.data.x },
+      yAxis: { type: 'value' },
+      series: [
+        {
+          type: this.chartType,
+          data: this.data.y,
+        },
+      ],
     };
 
-    // Manually trigger the chart update
     this.cdr.detectChanges();
+  }
+
+  ngOnDestroy(): void {
+    if (this.chartDataSubscription) {
+      this.chartDataSubscription.unsubscribe();
+    }
+  }
+
+  private transformData(data: { time: string; value: number }[]): { x: string[]; y: number[] } {
+    const x = data.map(item => item.time);
+    const y = data.map(item => item.value);
+    return { x, y };
   }
 }
