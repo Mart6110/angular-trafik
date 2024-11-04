@@ -21,10 +21,11 @@ import { Subscription } from 'rxjs';
   styleUrls: ['./chart.component.scss'],
 })
 export class ChartComponent implements OnInit, OnChanges {
-  // Input properties to receive chart type, title, and data from parent component
+  // Input properties to receive chart type, title, data, and color from parent component
   @Input() chartType: 'line' | 'bar' | 'scatter' | 'pie' = 'line';
   @Input() title: string = '';
   @Input() data: { x: string[]; y: number[] } = { x: [], y: [] };
+  @Input() color: string = 'blue'; // Ensure this line is present
 
   // ECharts option object to configure the chart
   chartOption: EChartsOption = {};
@@ -56,7 +57,7 @@ export class ChartComponent implements OnInit, OnChanges {
 
   // Lifecycle hook that runs when input properties change
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['data']) {
+    if (changes['data'] || changes['color']) { // Add color change detection
       this.updateChart();
     }
   }
@@ -65,12 +66,23 @@ export class ChartComponent implements OnInit, OnChanges {
   updateChart(): void {
     this.chartOption = {
       title: { text: this.title },
-      xAxis: this.chartType !== 'pie' ? { type: 'category', data: this.data.x } : undefined,
+      tooltip: {
+        trigger: this.chartType != 'bar' ? 'item' : 'axis',
+        axisPointer: {
+          type: 'shadow'
+        }
+      },
+      xAxis: this.chartType !== 'pie' ? { 
+        type: 'category', 
+        data: this.data.x,
+        boundaryGap: this.chartType === 'line' ? false : true // Ensure data points start at the y-axis for line charts
+      } : undefined,
       yAxis: this.chartType !== 'pie' ? { type: 'value' } : undefined,
       series: [
         {
           type: this.chartType,
           data: this.chartType === 'pie' ? this.data.x.map((name, index) => ({ name, value: this.data.y[index] })) : this.data.y,
+          itemStyle: { color: this.color } // Add color to series
         },
       ],
     };

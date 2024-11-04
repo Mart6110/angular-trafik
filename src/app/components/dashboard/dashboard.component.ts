@@ -4,7 +4,12 @@ import { ChartComponent } from "../chart/chart.component";
 import { WebSocketService } from "../../services/web-socket.service";
 import { ChartDataService, ChartData } from '../../services/chart-data.service';
 import { Subscription } from 'rxjs';
+import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
+import { MatSelectChange } from '@angular/material/select';
+
 
 // Define the possible chart types
 type ChartType = 'line' | 'bar' | 'scatter' | 'pie';
@@ -14,12 +19,13 @@ interface ChartConfig {
   type: ChartType;
   title: string;
   data: { x: string[]; y: number[] };
+  color: string;
 }
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, ChartComponent, MatCardModule],
+  imports: [CommonModule, ChartComponent, FormsModule, MatCardModule, MatFormFieldModule, MatSelectModule], // Include MatCardModule
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
@@ -27,10 +33,10 @@ interface ChartConfig {
 export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   // Array to hold the configuration for each chart
   chartsConfig: ChartConfig[] = [
-    { type: 'line', title: 'Line Chart', data: { x: [], y: [] } },
-    { type: 'bar', title: 'Bar Chart', data: { x: [], y: [] } },
-    { type: 'line', title: 'Line Chart', data: { x: [], y: [] } },
-    { type: 'bar', title: 'Bar Chart', data: { x: [], y: [] } },
+    { type: 'line', title: 'Line Chart', data: { x: [], y: [] }, color: 'blue' },
+    { type: 'bar', title: 'Bar Chart', data: { x: [], y: [] }, color: 'red' },
+    { type: 'line', title: 'Line Chart', data: { x: [], y: [] }, color: 'green' },
+    { type: 'bar', title: 'Bar Chart', data: { x: [], y: [] }, color: 'purple' },
   ];
 
   // Variables to manage the simulation interval and chart data subscription
@@ -91,4 +97,18 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
       this.chartDataService.updateChartData(simulatedData);
     }, 1000);
   }
+
+  changeChartType(chartConfig: ChartConfig, event: MatSelectChange) {
+    const newType = event.value as ChartType;
+    chartConfig.type = newType;
+    this.cdr.detectChanges();
+  }
+  
+  
+  changeChartColor(chartConfig: ChartConfig, event: MatSelectChange) {
+    const newColor = event.value;
+    chartConfig.color = newColor;
+    this.cdr.detectChanges();
+  }
+  
 }

@@ -2,15 +2,46 @@
   <div class="dashboard-header">
     <h3>Dashboard</h3>
   </div>
-  
+
   <!-- Loop through each chart configuration in chartsConfig to render individual chart components -->
   <div class="chart-wrapper">
-    <mat-card *ngFor="let chartConfig of chartsConfig" style="width: 50%">
-      <mat-card-header>
+    <mat-card *ngFor="let chartConfig of chartsConfig">
+      <mat-card-header class="chart-header">
         <mat-card-title>{{ chartConfig.title }}</mat-card-title>
+        <div class="select-wrapper">
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Chart Type</mat-label>
+            <mat-select
+              [(value)]="chartConfig.type"
+              (selectionChange)="changeChartType(chartConfig, $event)"
+            >
+              <mat-option value="line">Line</mat-option>
+              <mat-option value="bar">Bar</mat-option>
+              <mat-option value="scatter">Scatter</mat-option>
+              <mat-option value="pie">Pie</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Chart Color</mat-label>
+            <mat-select
+              [(value)]="chartConfig.color"
+              (selectionChange)="changeChartColor(chartConfig, $event)"
+            >
+              <mat-option value="blue">Blue</mat-option>
+              <mat-option value="red">Red</mat-option>
+              <mat-option value="green">Green</mat-option>
+              <mat-option value="purple">Purple</mat-option>
+            </mat-select>
+          </mat-form-field>
+          
+        </div>
       </mat-card-header>
       <mat-card-content>
-        <app-chart [chartType]="chartConfig.type" [data]="chartConfig.data">
+        <app-chart
+          [chartType]="chartConfig.type"
+          [data]="chartConfig.data"
+          [color]="chartConfig.color"
+        >
         </app-chart>
       </mat-card-content>
     </mat-card>

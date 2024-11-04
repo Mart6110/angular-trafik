@@ -12,6 +12,11 @@ app-chart {
     height: 100vh;
 }
 
+.mat-mdc-card{
+    background-color: #fff;
+    display: flex;
+}
+
 .dashboard-header {
     display: flex;
     justify-content: space-between;
@@ -20,8 +25,22 @@ app-chart {
     margin-inline: 1rem;
 }
 
-.chart-wrapper {
+.select-wrapper {
     display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.chart-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    padding: 1rem;
 }
