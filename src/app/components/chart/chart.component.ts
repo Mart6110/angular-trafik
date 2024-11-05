@@ -29,7 +29,7 @@ export class ChartComponent implements OnInit, OnChanges {
 
   // ECharts option object to configure the chart
   chartOption: EChartsOption = {};
-  
+
   // ViewChild to access the NgxEchartsDirective instance
   @ViewChild(NgxEchartsDirective, { static: false })
   chart!: NgxEchartsDirective;
@@ -57,7 +57,8 @@ export class ChartComponent implements OnInit, OnChanges {
 
   // Lifecycle hook that runs when input properties change
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['data'] || changes['color']) { // Add color change detection
+    if (changes['data'] || changes['color']) {
+      // Add color change detection
       this.updateChart();
     }
   }
@@ -69,20 +70,42 @@ export class ChartComponent implements OnInit, OnChanges {
       tooltip: {
         trigger: this.chartType != 'bar' ? 'item' : 'axis',
         axisPointer: {
-          type: 'shadow'
-        }
+          type: 'shadow',
+        },
       },
-      xAxis: this.chartType !== 'pie' ? { 
-        type: 'category', 
-        data: this.data.x,
-        boundaryGap: this.chartType === 'line' ? false : true // Ensure data points start at the y-axis for line charts
-      } : undefined,
+      xAxis:
+        this.chartType !== 'pie'
+          ? {
+              type: 'category',
+              data: this.data.x,
+              boundaryGap: this.chartType === 'line' ? false : true, // Ensure data points start at the y-axis for line charts
+            }
+          : undefined,
       yAxis: this.chartType !== 'pie' ? { type: 'value' } : undefined,
       series: [
         {
           type: this.chartType,
-          data: this.chartType === 'pie' ? this.data.x.map((name, index) => ({ name, value: this.data.y[index] })) : this.data.y,
-          itemStyle: { color: this.color } // Add color to series
+          data:
+            this.chartType === 'pie'
+              ? this.data.x.map((name, index) => ({
+                  name,
+                  value: this.data.y[index],
+                }))
+              : this.data.y,
+          itemStyle: { color: this.color },
+          markLine: {
+            animation: false,
+            data: [
+              { type: 'max', name: 'Max' },
+              { type: 'average', name: 'avg' },
+              { type: 'min', name: 'Min' },
+            ],
+            label: {
+              show: true,
+              formatter: '{b}: {c}',
+              color: '#fff',
+            },
+          },
         },
       ],
     };
@@ -99,8 +122,8 @@ export class ChartComponent implements OnInit, OnChanges {
 
   // Method to transform the data into the format required by the chart
   private transformData(data: ChartData[]): { x: string[]; y: number[] } {
-    const x = data.map(item => item.time);
-    const y = data.map(item => item.value);
+    const x = data.map((item) => item.time);
+    const y = data.map((item) => item.value);
     return { x, y };
   }
 }

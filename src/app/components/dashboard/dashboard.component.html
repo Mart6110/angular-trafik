@@ -1,6 +1,10 @@
 <div class="dashboard-wrapper">
   <div class="dashboard-header">
     <h3>Dashboard</h3>
+    <mat-form-field appearance="outline" class="form-field">
+      <mat-label>Data Points Limit</mat-label>
+      <input matInput type="number" [(ngModel)]="dataPointLimit" min="1" />
+    </mat-form-field>
   </div>
 
   <!-- Loop through each chart configuration in chartsConfig to render individual chart components -->
