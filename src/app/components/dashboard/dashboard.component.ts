@@ -33,10 +33,10 @@ interface ChartConfig {
 export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   // Array to hold the configuration for each chart
   chartsConfig: ChartConfig[] = [
-    { type: 'line', title: 'Line Chart', data: { x: [], y: [] }, color: 'blue' },
-    { type: 'bar', title: 'Bar Chart', data: { x: [], y: [] }, color: 'red' },
-    { type: 'line', title: 'Line Chart', data: { x: [], y: [] }, color: 'green' },
-    { type: 'bar', title: 'Bar Chart', data: { x: [], y: [] }, color: 'purple' },
+    { type: 'line', title: 'Line Chart', data: { x: [], y: [] }, color: '#11f0e3' },
+    { type: 'bar', title: 'Bar Chart', data: { x: [], y: [] }, color: '#FF5A5F'},
+    { type: 'line', title: 'Line Chart', data: { x: [], y: [] }, color: '#FC642D' },
+    { type: 'bar', title: 'Bar Chart', data: { x: [], y: [] }, color: '#767676' },
   ];
 
   // Variables to manage the simulation interval and chart data subscription
@@ -103,8 +103,7 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
     chartConfig.type = newType;
     this.cdr.detectChanges();
   }
-  
-  
+
   changeChartColor(chartConfig: ChartConfig, event: MatSelectChange) {
     const newColor = event.value;
     chartConfig.color = newColor;

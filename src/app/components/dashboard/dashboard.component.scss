@@ -4,6 +4,10 @@
     gap: 16px;
 }
 
+h3 {
+    margin: 0;
+}
+
 app-chart {
     flex: 1 1 calc(50% - 16px);
 }
@@ -13,7 +17,6 @@ app-chart {
 }
 
 .mat-mdc-card{
-    background-color: #fff;
     display: flex;
 }
 
@@ -23,6 +26,7 @@ app-chart {
     align-items: end;
     border-bottom: 1px solid #e0e0e0;
     margin-inline: 1rem;
+    padding: .5rem;
 }
 
 .select-wrapper {

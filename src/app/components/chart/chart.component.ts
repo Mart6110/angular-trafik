@@ -25,7 +25,7 @@ export class ChartComponent implements OnInit, OnChanges {
   @Input() chartType: 'line' | 'bar' | 'scatter' | 'pie' = 'line';
   @Input() title: string = '';
   @Input() data: { x: string[]; y: number[] } = { x: [], y: [] };
-  @Input() color: string = 'blue'; // Ensure this line is present
+  @Input() color: string = '#11f0e3';
 
   // ECharts option object to configure the chart
   chartOption: EChartsOption = {};
