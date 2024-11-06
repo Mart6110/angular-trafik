@@ -21,20 +21,23 @@ import { Subscription } from 'rxjs';
   styleUrls: ['./chart.component.scss'],
 })
 export class ChartComponent implements OnInit, OnChanges {
-  // Input properties to receive chart type, title, data, and color from parent component
+  // Inputs for configuring the chart's type, title, data, and color
   @Input() chartType: 'line' | 'bar' | 'scatter' | 'pie' = 'line';
   @Input() title: string = '';
   @Input() data: { x: string[]; y: number[] } = { x: [], y: [] };
   @Input() color: string = '#11f0e3';
 
-  // ECharts option object to configure the chart
+  // Configuration for ECharts, populated in updateChart()
   chartOption: EChartsOption = {};
 
-  // ViewChild to access the NgxEchartsDirective instance
+  // Predefined colors for pie chart segments
+  private pieChartColors = ['#11f0e3', '#FF5A5F', '#FC642D', '#767676', '#FFB6C1'];
+
+  // Reference to the chart instance
   @ViewChild(NgxEchartsDirective, { static: false })
   chart!: NgxEchartsDirective;
 
-  // Subscription to manage the chart data observable
+  // Subscription for chart data updates from ChartDataService
   private chartDataSubscription!: Subscription;
 
   constructor(
@@ -42,20 +45,20 @@ export class ChartComponent implements OnInit, OnChanges {
     private chartDataService: ChartDataService
   ) {}
 
-  // Lifecycle hook that runs once the component is initialized
+  // Initialization to set up the chart and data subscription
   ngOnInit(): void {
-    this.updateChart();
+    this.updateChart(); // Set initial chart configuration
     this.chartDataSubscription = this.chartDataService.chartData$.subscribe(
       (data) => {
         if (Array.isArray(data)) {
-          this.data = this.transformData(data);
+          this.data = this.transformData(data); // Format data if received as an array
         }
-        this.updateChart();
+        this.updateChart(); // Refresh chart with new data
       }
     );
   }
 
-  // Lifecycle hook that runs when input properties change
+  // Update chart when input properties change (e.g., new data or color)
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data'] || changes['color']) {
       // Add color change detection
@@ -63,12 +66,13 @@ export class ChartComponent implements OnInit, OnChanges {
     }
   }
 
-  // Method to update the chart options and trigger change detection
+  // Method to configure chart options based on inputs and type
   updateChart(): void {
     this.chartOption = {
       title: { text: this.title },
       tooltip: {
-        trigger: this.chartType != 'bar' ? 'item' : 'axis',
+        formatter: '{b}: {c}',
+        trigger: this.chartType !== 'bar' ? 'item' : 'axis',
         axisPointer: {
           type: 'shadow',
         },
@@ -78,7 +82,7 @@ export class ChartComponent implements OnInit, OnChanges {
           ? {
               type: 'category',
               data: this.data.x,
-              boundaryGap: this.chartType === 'line' ? false : true, // Ensure data points start at the y-axis for line charts
+              boundaryGap: this.chartType === 'line' ? false : true,
             }
           : undefined,
       yAxis: this.chartType !== 'pie' ? { type: 'value' } : undefined,
@@ -92,35 +96,41 @@ export class ChartComponent implements OnInit, OnChanges {
                   value: this.data.y[index],
                 }))
               : this.data.y,
-          itemStyle: { color: this.color },
-          markLine: {
-            animation: false,
-            data: [
-              { type: 'max', name: 'Max' },
-              { type: 'average', name: 'avg' },
-              { type: 'min', name: 'Min' },
-            ],
-            label: {
-              show: true,
-              formatter: '{b}: {c}',
-              color: '#fff',
-            },
+          itemStyle: { 
+            color: this.chartType === 'pie' ? undefined : this.color 
           },
+          color: this.chartType === 'pie' ? this.pieChartColors : [this.color],
+          markLine:
+            this.chartType !== 'pie'
+              ? {
+                  animation: false,
+                  data: [
+                    { type: 'max', name: 'Max' },
+                    { type: 'average', name: 'avg' },
+                    { type: 'min', name: 'Min' },
+                  ],
+                  label: {
+                    show: true,
+                    formatter: '{b}: {c}',
+                    color: '#fff',
+                  },
+                }
+              : undefined,
         },
       ],
     };
-
+  
     this.cdr.detectChanges();
   }
 
-  // Lifecycle hook that runs when the component is destroyed
+  // Cleanup by unsubscribing from observables when component is destroyed
   ngOnDestroy(): void {
     if (this.chartDataSubscription) {
       this.chartDataSubscription.unsubscribe();
     }
   }
 
-  // Method to transform the data into the format required by the chart
+  // Transforms raw data array into an object with x and y arrays for the chart
   private transformData(data: ChartData[]): { x: string[]; y: number[] } {
     const x = data.map((item) => item.time);
     const y = data.map((item) => item.value);

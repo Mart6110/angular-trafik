@@ -9,7 +9,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { ChartComponent } from '../chart/chart.component';
 import { WebSocketService } from '../../services/web-socket.service';
-import { ChartDataService, ChartData } from '../../services/chart-data.service';
+import { ChartDataService, ChartData, BatchData } from '../../services/chart-data.service';
 import { Subscription } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -17,11 +17,13 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSelectChange } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
+import { MatTableModule } from '@angular/material/table'; 
+import { MatTableDataSource } from '@angular/material/table';
 
-// Define the possible chart types
+// Define possible chart types for configuration flexibility
 type ChartType = 'line' | 'bar' | 'scatter' | 'pie';
 
-// Interface for chart configuration
+// Interface for chart configuration details
 interface ChartConfig {
   type: ChartType;
   title: string;
@@ -40,46 +42,48 @@ interface ChartConfig {
     MatFormFieldModule,
     MatSelectModule,
     MatInputModule,
+    MatTableModule
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss'],
 })
 export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
-  // Array to hold the configuration for each chart
+  // Configuration for different types of charts in the dashboard
   chartsConfig: ChartConfig[] = [
     {
       type: 'line',
-      title: 'Line Chart',
+      title: 'Summer Dress Data',
       data: { x: [], y: [] },
       color: '#11f0e3',
     },
     {
       type: 'bar',
-      title: 'Bar Chart',
+      title: 'Car Crash Data',
       data: { x: [], y: [] },
       color: '#FF5A5F',
     },
     {
-      type: 'line',
-      title: 'Line Chart',
+      type: 'pie',
+      title: 'Batch Data',
       data: { x: [], y: [] },
-      color: '#FC642D',
-    },
-    {
-      type: 'bar',
-      title: 'Bar Chart',
-      data: { x: [], y: [] },
-      color: '#767676',
+      color: '#FFB6C1',
     },
   ];
 
-  // Variables to manage the simulation interval and chart data subscription
+  // Variables to manage the simulation interval and chart data subscription -- Not used
   private simulationInterval: any;
+
+  // Subscription management for WebSocket data streams
   private chartDataSubscription!: Subscription;
+  private batchDataSubscription!: Subscription;
+  
   private dataCounter = 0;
 
+  // Manage a data source for table display
   dataPointLimit: number = 10;
+  displayedColumns: string[] = ['time', 'value', 'title'];
+  dataSource = new MatTableDataSource<ChartData>();
 
   constructor(
     private wsService: WebSocketService,
@@ -87,31 +91,27 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
     private cdr: ChangeDetectorRef
   ) {}
 
-  // Lifecycle hook that runs once the component is initialized
+  // Initialize component; subscriptions are set up in AfterViewInit
   ngOnInit(): void {}
 
-  // Lifecycle hook that runs after the component's view has been initialized
+  // Subscribes to WebSocket data after component view initialization
   ngAfterViewInit(): void {
-    this.chartDataSubscription = this.chartDataService.chartData$.subscribe(
-      (data) => {
-        this.updateChartData(data);
-      }
-    );
+    this.chartDataSubscription = this.chartDataService.chartData$.subscribe((data) => {
+      this.updateChartData(data);
+    });
 
-    //this.startDataSimulation();
+    this.batchDataSubscription = this.chartDataService.batchData$.subscribe((batchData) => {
+      this.updatePieChartData(batchData);
+    });
   }
 
-  // Lifecycle hook that runs when the component is destroyed
+  // Cleanup to prevent memory leaks by unsubscribing on component destruction
   ngOnDestroy(): void {
-    if (this.simulationInterval) {
-      clearInterval(this.simulationInterval);
-    }
-    if (this.chartDataSubscription) {
-      this.chartDataSubscription.unsubscribe();
-    }
+    this.chartDataSubscription.unsubscribe();
+    this.batchDataSubscription.unsubscribe();
   }
 
-  // Method to apply the new data limit to each chart
+  // Updates the limit on data points shown in each chart and refreshes view
   applyDataLimit() {
     this.chartsConfig.forEach((chartConfig) => {
       this.trimChartData(chartConfig);
@@ -119,45 +119,61 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
     this.cdr.detectChanges();
   }
 
-  // Method to update the chart data
+  // Updates the line or bar chart with incoming data and manages data limit
   updateChartData(data: ChartData) {
-    const chartIndex = this.dataCounter % this.chartsConfig.length;
-    const chartConfig = this.chartsConfig[chartIndex];
+    const chartIndex = this.chartsConfig.findIndex(chart => chart.title === data.title);
+    if (chartIndex !== -1) {
+      const chartConfig = this.chartsConfig[chartIndex];
+      chartConfig.data.x.push(data.time);
+      chartConfig.data.y.push(data.value);
+      this.trimChartData(chartConfig);
 
-    chartConfig.data.x.push(data.time.toString());
-    chartConfig.data.y.push(data.value);
-
-    this.trimChartData(chartConfig);
-    this.dataCounter++;
-    this.cdr.detectChanges();
+      // Update the data table displayed in the component
+      this.dataSource.data = [data, ...this.dataSource.data];
+      this.cdr.detectChanges();
+    }
   }
 
-  // Method to start the data simulation
+  // Updates the pie chart with batch data
+  updatePieChartData(batchData: BatchData[]) {
+    const pieChart = this.chartsConfig.find((chart) => chart.title === 'Batch Data');
+    if (pieChart) {
+      pieChart.data.x = batchData.map((item) => item.name);
+      pieChart.data.y = batchData.map((item) => item.value);
+      this.cdr.detectChanges();
+    }
+  }
+
+  // Starts simulating data for the charts at regular intervals -- Not used -- Was used for testing
   startDataSimulation() {
     this.simulationInterval = setInterval(() => {
       const simulatedData: ChartData = {
         time: new Date().toLocaleTimeString(),
         value: Math.floor(Math.random() * 100),
+        title: this.chartsConfig[this.dataCounter % 2].title,
       };
       this.chartDataService.updateChartData(simulatedData);
     }, 1000);
   }
 
+  // Changes the chart type for a given chart configuration
   changeChartType(chartConfig: ChartConfig, event: MatSelectChange) {
     const newType = event.value as ChartType;
     chartConfig.type = newType;
     this.cdr.detectChanges();
   }
 
+  // Changes the color of a specific chart based on user selection
   changeChartColor(chartConfig: ChartConfig, event: MatSelectChange) {
     const newColor = event.value;
     chartConfig.color = newColor;
     this.cdr.detectChanges();
   }
 
-  // Helper function to trim data arrays based on dataPointLimit
-  private trimChartData(chartConfig: ChartConfig) {
-    while (chartConfig.data.x.length > this.dataPointLimit) {
+  // Trims chart data arrays to adhere to the configured limit
+  private trimChartData(chartConfig: any) {
+    const limit = 10;
+    while (chartConfig.data.x.length > limit) {
       chartConfig.data.x.shift();
       chartConfig.data.y.shift();
     }
